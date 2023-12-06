@@ -1,17 +1,17 @@
 import React, { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 
-const CumulativeLineChart = ({ data }) => {
+const CandlestickChart = ({ data }) => {
     const d3Container = useRef(null);
 
     useEffect(() => {
         if (data && d3Container.current) {
-            const margin = { top: 20, right: 20, bottom: 30, left: 50 },
+            // Clear existing SVG content
+            d3.select(d3Container.current).selectAll("*").remove();
+
+            const margin = { top: 20, right: 50, bottom: 30, left: 50 },
                 width = 960 - margin.left - margin.right,
                 height = 500 - margin.top - margin.bottom;
-
-            // Clear SVG before redrawing
-            d3.select(d3Container.current).selectAll("*").remove();
 
             const svg = d3.select(d3Container.current)
                 .attr("width", width + margin.left + margin.right)
@@ -19,65 +19,68 @@ const CumulativeLineChart = ({ data }) => {
                 .append("g")
                 .attr("transform", `translate(${margin.left},${margin.top})`);
 
-            const sortedData = [...data].sort((a, b) => new Date(a.date) - new Date(b.date));
+            const x = d3.scaleBand()
+                .range([0, width])
+                .domain(data.map(d => d.date))
+                .padding(0.1);
 
-            // Calculate cumulative total
-            let cumulative = 0;
-            const cumulativeData = sortedData.map(d => {
-                cumulative += d.close;
-                return { date: d.date, cumulative: cumulative };
-            });
+            const y = d3.scaleLinear()
+                .domain([d3.min(data, d => d.low), d3.max(data, d => d.high)])
+                .range([height, 0]);
 
-            const x = d3.scaleTime()
-                .domain(d3.extent(cumulativeData, d => d.date))
-                .range([0, width]);
             svg.append("g")
                 .attr("transform", `translate(0,${height})`)
                 .call(d3.axisBottom(x).tickFormat(d3.timeFormat("%Y-%m-%d")));
 
-            const y = d3.scaleLinear()
-                .domain([0, d3.max(cumulativeData, d => d.cumulative)])
-                .range([height, 0]);
             svg.append("g")
                 .call(d3.axisLeft(y));
 
-            const line = d3.line()
-                .x(d => x(d.date))
-                .y(d => y(d.cumulative));
+            // Tooltip setup
+            const tooltip = d3.select("body").append("div")
+                .attr("class", "tooltip")
+                .style("opacity", 0)
+                .style("position", "absolute")
+                .style("background-color", "white")
+                .style("border", "solid")
+                .style("border-width", "2px")
+                .style("border-radius", "5px")
+                .style("padding", "5px");
 
-            svg.append("path")
-                .datum(cumulativeData)
-                .attr("fill", "none")
-                .attr("stroke", "steelblue")
-                .attr("stroke-width", 1.5)
-                .attr("d", line);
-
-            // Tooltip
-            const tooltip = d3.select('body').append('div')
-                .attr('class', 'tooltip')
-                .style('opacity', 0);
-
-            svg.selectAll('.dot')
-                .data(cumulativeData)
-                .enter().append('circle')
-                .attr('class', 'dot')
-                .attr('cx', d => x(d.date))
-                .attr('cy', d => y(d.cumulative))
-                .attr('r', 5)
-                .attr('fill', 'steelblue')
-                .on('mouseover', (event, d) => {
-                    tooltip.transition().duration(200).style('opacity', 0.9);
-                    tooltip.html(`Date: ${d3.timeFormat('%Y-%m-%d')(d.date)}<br>Cumulative Total: ${d.cumulative}`)
-                        .style('left', `${event.pageX}px`)
-                        .style('top', `${event.pageY - 28}px`);
+            // Draw candlesticks
+            const candlesticks = svg.selectAll(".candlestick")
+                .data(data)
+                .enter().append("g")
+                .attr("class", "candlestick")
+                .on("mouseover", (event, d) => {
+                    tooltip.transition().duration(200).style("opacity", 1);
+                    tooltip.html(`Date: ${d.date}<br>Open: ${d.open}<br>High: ${d.high}<br>Low: ${d.low}<br>Close: ${d.close}`)
+                        .style("left", (event.pageX + 10) + "px")
+                        .style("top", (event.pageY - 10) + "px");
                 })
-                .on('mouseout', () => {
-                    tooltip.transition().duration(500).style('opacity', 0);
+                .on("mouseout", () => {
+                    tooltip.transition().duration(500).style("opacity", 0);
                 });
+
+            // Draw rectangles for the Open-Close
+            candlesticks.append("rect")
+                .attr("x", d => x(d.date))
+                .attr("y", d => y(Math.max(d.open, d.close)))
+                .attr("width", x.bandwidth())
+                .attr("height", d => Math.abs(y(d.open) - y(d.close)))
+                .attr("fill", d => d.open > d.close ? "red" : "green");
+
+            // Draw lines for the High-Low
+            candlesticks.append("line")
+                .attr("x1", d => x(d.date) + x.bandwidth() / 2)
+                .attr("x2", d => x(d.date) + x.bandwidth() / 2)
+                .attr("y1", d => y(d.high))
+                .attr("y2", d => y(d.low))
+                .attr("stroke", "black")
+                .attr("stroke-width", 1);
         }
     }, [data]);
 
     return <svg ref={d3Container} />;
 };
 
-export default CumulativeLineChart;
+export default CandlestickChart;

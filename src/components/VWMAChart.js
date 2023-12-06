@@ -1,12 +1,14 @@
 import React, { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 
-const SimplifiedCandlestickChart = ({ data }) => {
+const VWMAChart = ({ data }) => {
     const d3Container = useRef(null);
 
     useEffect(() => {
         if (data && d3Container.current) {
-            const margin = { top: 20, right: 50, bottom: 30, left: 50 },
+            d3.select(d3Container.current).selectAll("*").remove();  // Clear existing SVG content
+
+            const margin = { top: 20, right: 20, bottom: 30, left: 50 },
                 width = 960 - margin.left - margin.right,
                 height = 500 - margin.top - margin.bottom;
 
@@ -16,36 +18,80 @@ const SimplifiedCandlestickChart = ({ data }) => {
                 .append("g")
                 .attr("transform", `translate(${margin.left},${margin.top})`);
 
-            const x = d3.scaleBand()
-                .range([0, width])
-                .padding(0.3)
-                .domain(data.map(d => d.date));
+            // Parse date
+            data.forEach(d => {
+                d.date = new Date(d.date);
+                d.volume = +d.volume; // Ensure volume is a number
+            });
+
+            const x = d3.scaleTime()
+                .domain(d3.extent(data, d => d.date))
+                .range([0, width]);
 
             const y = d3.scaleLinear()
-                .range([height, 0])
-                .domain([0, d3.max(data, d => d.close)]);
+                .domain([350, d3.max(data, d => d.close)]) // Adjusted to start from 350
+                .range([height, 0]);
 
-            svg.selectAll("rect")
-                .data(data)
-                .enter().append("rect")
-                .attr("x", d => x(d.date))
-                .attr("y", d => y(d.close))
-                .attr("width", x.bandwidth())
-                .attr("height", d => height - y(d.close))
-                .attr("fill", "steelblue");
+            const calculateVWMA = (data, period = 5) => {
+                return data.map((val, index) => {
+                    let start = Math.max(0, index - period + 1);
+                    let subset = data.slice(start, index + 1);
+                    let vwma = d3.sum(subset, d => d.close * d.volume) / d3.sum(subset, d => d.volume);
+                    return { date: val.date, vwma };
+                });
+            };
+
+            const vwmaData = calculateVWMA(data);
+
+            const line = d3.line()
+                .x(d => x(d.date))
+                .y(d => y(d.vwma));
+
+            // Tooltip setup
+            const tooltip = d3.select('body').append('div')
+                .attr('class', 'tooltip')
+                .style('opacity', 0)
+                .style('position', 'absolute')
+                .style('background-color', 'white')
+                .style('border', 'solid')
+                .style('border-width', '1px')
+                .style('border-radius', '5px')
+                .style('padding', '5px');
+
+            svg.append("path")
+                .datum(vwmaData)
+                .attr("class", "line")
+                .attr("d", line)
+                .style("stroke", "purple");
 
             svg.append("g")
-                .attr("class", "axis axis--x")
                 .attr("transform", `translate(0,${height})`)
                 .call(d3.axisBottom(x).tickFormat(d3.timeFormat("%Y-%m-%d")));
 
             svg.append("g")
-                .attr("class", "axis axis--y")
                 .call(d3.axisLeft(y));
+
+            // Adding points for tooltip
+            svg.selectAll(".dot")
+                .data(vwmaData)
+                .enter().append("circle")
+                .attr("class", "dot")
+                .attr("cx", d => x(d.date))
+                .attr("cy", d => y(d.vwma))
+                .attr("r", 5)
+                .on("mouseover", (event, d) => {
+                    tooltip.transition().duration(200).style("opacity", 0.9);
+                    tooltip.html(`Date: ${d3.timeFormat("%Y-%m-%d")(d.date)}<br>VWMA: ${d.vwma.toFixed(2)}`)
+                        .style("left", (event.pageX + 10) + "px")
+                        .style("top", (event.pageY - 10) + "px");
+                })
+                .on("mouseout", () => {
+                    tooltip.transition().duration(500).style("opacity", 0);
+                });
         }
     }, [data]);
 
     return <svg ref={d3Container} />;
 };
 
-export default SimplifiedCandlestickChart;
+export default VWMAChart;
