@@ -15,6 +15,7 @@ import Footer from "./components/Footer";
 const App = () => {
     const [data, setData] = useState([]);
     const [selectedChart, setSelectedChart] = useState('BarChart');
+    const [error, setError] = useState(null);
 
 
     const transformData = (rawData) => {
@@ -31,10 +32,14 @@ const App = () => {
     };
 
     useEffect(() => {
-        fetchData().then(rawData => {
-            const transformedData = transformData(rawData);
-            console.log(JSON.stringify(transformedData));
-            setData(transformedData);
+        fetchData().then(result => {
+            if (result.error) {
+                setError(result.error);
+            } else {
+                const transformedData = transformData(result.data);
+                console.log(JSON.stringify(transformedData));
+                setData(transformedData);
+            }
         });
     }, []);
 
@@ -62,30 +67,39 @@ const App = () => {
     };
 
     return (
-
         <div className="app">
             <Header/>
+
             <div className="content">
-                <div className="chart-selector">
-                    <label htmlFor="chart-type">Select Chart Type: </label>
-                    <select id="chart-type" onChange={e => setSelectedChart(e.target.value)} value={selectedChart}>
-                        <option value="BarChart">Bar Chart</option>
-                        <option value="LineChart">Line Chart</option>
-                        <option value="AreaChart">Area Chart</option>
-                        <option value="ScatterPlot">Scatter Plot</option>
-                        <option value="Histogram">Histogram</option>
-                        <option value="CandlestickChart">Candlestick Chart</option>
-                        <option value="MovingAverageLineChart">Moving Average Line Chart</option>
-                        <option value="VWMAChart">VWMA Chart</option>
-                    </select>
-                </div>
-                <div className="chart-container">
-                    {renderChart()}
-                </div>
+                {error ? (
+                    <div className="error-message">{error}</div>
+                ) : (
+                    <>
+                        <div className="chart-selector">
+                            <label htmlFor="chart-type">Select Chart Type: </label>
+                            <select id="chart-type" onChange={e => setSelectedChart(e.target.value)} value={selectedChart}>
+                                <option value="BarChart">Bar Chart</option>
+                                <option value="LineChart">Line Chart</option>
+                                <option value="AreaChart">Area Chart</option>
+                                <option value="ScatterPlot">Scatter Plot</option>
+                                <option value="Histogram">Histogram</option>
+                                <option value="CandlestickChart">Candlestick Chart</option>
+                                <option value="MovingAverageLineChart">Moving Average Line Chart</option>
+                                <option value="VWMAChart">VWMA Chart</option>
+                            </select>
+                        </div>
+
+                        <div className="chart-container">
+                            {renderChart()}
+                        </div>
+                    </>
+                )}
             </div>
+
             <Footer/>
         </div>
     );
+
 }
 
 export default App;

@@ -18,9 +18,10 @@ const options = {
 const fetchData = async () => {
     try {
         const response = await axios.request(options);
-        return response.data["Time Series (Daily)"];
+        return { data: response.data["Time Series (Daily)"], error: null };
     } catch (error) {
         console.error(error);
+        return { data: null, error: "API limit reached. Please try again after 5 minutes." };
     }
 };
 

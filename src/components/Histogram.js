@@ -6,7 +6,7 @@ const Histogram = ({ data }) => {
 
     useEffect(() => {
         if (data && d3Container.current) {
-            const margin = { top: 20, right: 20, bottom: 30, left: 50 },
+            const margin = { top: 20, right: 20, bottom: 50, left: 60 },
                 width = 960 - margin.left - margin.right,
                 height = 500 - margin.top - margin.bottom;
 
@@ -42,6 +42,19 @@ const Histogram = ({ data }) => {
 
             svg.append("g")
                 .call(d3.axisLeft(y));
+
+            svg.append("text")
+                .attr("transform", `translate(${width / 2}, ${height + margin.top + 20})`)
+                .style("text-anchor", "middle")
+                .text("Range");
+
+            svg.append("text")
+                .attr("transform", "rotate(-90)")
+                .attr("y", 0 - margin.left + 10)
+                .attr("x", 0 - (height / 2))
+                .attr("dy", "1em")
+                .style("text-anchor", "middle")
+                .text("Frequency");
 
             const tooltip = d3.select("body").append("div")
                 .attr("class", "tooltip")
