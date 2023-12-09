@@ -30,38 +30,51 @@ const BarChart = ({ data }) => {
                 .call(d3.axisBottom(x).tickFormat(d3.timeFormat("%Y-%m-%d")));
 
             const y = d3.scaleLinear()
-                .domain([350, d3.max(data, d => d.close)]) // Adjusted to start from 350
+                .domain([350, d3.max(data, d => d.close)])
                 .range([height, 0]);
             svg.append("g")
                 .call(d3.axisLeft(y));
 
-            // Tooltip
             const tooltip = d3.select("body").append("div")
                 .attr("class", "tooltip")
                 .style("opacity", 0);
 
-            svg.selectAll(".bar")
+            const bars = svg.selectAll(".bar")
                 .data(sortedData)
                 .enter()
                 .append("rect")
                 .attr("class", "bar")
-                .attr("x", d => x(d.date))
-                .attr("y", d => y(d.close))
+                .attr("x", d => x(new Date(d.date)))
+                .attr("y", height)
                 .attr("width", x.bandwidth())
-                .attr("height", d => height - y(d.close))
-                .attr("fill", "#69b3a2")
-                .on("mouseover", (event, d) => {
-                    tooltip.transition()
-                        .duration(200)
-                        .style("opacity", .9);
-                    tooltip.html(`Date: ${d3.timeFormat("%Y-%m-%d")(d.date)}<br>Close: ${d.close}`)
-                        .style("left", (event.pageX) + "px")
-                        .style("top", (event.pageY - 28) + "px");
-                })
-                .on("mouseout", d => {
+                .attr("height", 0)
+                .attr("fill", "#69b3a2");
+
+            bars.transition()
+                .duration(800)
+                .attr("y", d => y(d.close))
+                .attr("height", d => height - y(d.close));
+
+            bars.on("mouseover", (event, d) => {
+                tooltip.transition()
+                    .duration(200)
+                    .style("opacity", .9);
+                tooltip.html(`Date: ${d3.timeFormat("%Y-%m-%d")(new Date(d.date))}<br>Close: ${d.close}`)
+                    .style("left", (event.pageX) + "px")
+                    .style("top", (event.pageY - 28) + "px");
+                d3.select(event.currentTarget)
+                    .transition()
+                    .duration(200)
+                    .attr("fill", "orange");
+            })
+                .on("mouseout", (event, d) => {
                     tooltip.transition()
                         .duration(500)
                         .style("opacity", 0);
+                    d3.select(event.currentTarget)
+                        .transition()
+                        .duration(200)
+                        .attr("fill", "#69b3a2");
                 });
         }
     }, [data]);

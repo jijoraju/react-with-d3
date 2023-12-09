@@ -31,7 +31,6 @@ const Histogram = ({ data }) => {
 
             const bins = histogram(data);
 
-            // Adjust y-axis to accommodate bin lengths
             const y = d3.scaleLinear()
                 .domain([0, d3.max(bins, d => d.length)])
                 .range([height, 0])
@@ -44,20 +43,23 @@ const Histogram = ({ data }) => {
             svg.append("g")
                 .call(d3.axisLeft(y));
 
-            // Tooltip
             const tooltip = d3.select("body").append("div")
                 .attr("class", "tooltip")
                 .style("opacity", 0);
 
-            // Rendering the bars
             svg.selectAll("rect")
                 .data(bins)
                 .enter().append("rect")
                 .attr("x", d => x(d.x0))
-                .attr("width", d => Math.max(0, x(d.x1) - x(d.x0) - 1)) // Ensure non-negative width
+                .attr("width", d => Math.max(0, x(d.x1) - x(d.x0) - 1))
+                .attr("y", height)
+                .attr("height", 0)
+                .transition().duration(800)
                 .attr("y", d => y(d.length))
                 .attr("height", d => height - y(d.length))
-                .style("fill", "#69b3a2")
+                .style("fill", "#F5DEB3");
+
+            svg.selectAll("rect")
                 .on("mouseover", function(event, d) {
                     tooltip.transition().duration(200).style("opacity", .9);
                     tooltip.html(`Range: ${d.x0.toFixed(2)} to ${d.x1.toFixed(2)}<br>Frequency: ${d.length}`)

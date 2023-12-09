@@ -30,12 +30,13 @@ const CandlestickChart = ({ data }) => {
 
             svg.append("g")
                 .attr("transform", `translate(0,${height})`)
+                .transition().duration(1000)
                 .call(d3.axisBottom(x).tickFormat(d3.timeFormat("%Y-%m-%d")));
 
             svg.append("g")
+                .transition().duration(1000)
                 .call(d3.axisLeft(y));
 
-            // Tooltip setup
             const tooltip = d3.select("body").append("div")
                 .attr("class", "tooltip")
                 .style("opacity", 0)
@@ -46,7 +47,6 @@ const CandlestickChart = ({ data }) => {
                 .style("border-radius", "5px")
                 .style("padding", "5px");
 
-            // Draw candlesticks
             const candlesticks = svg.selectAll(".candlestick")
                 .data(data)
                 .enter().append("g")
@@ -61,18 +61,21 @@ const CandlestickChart = ({ data }) => {
                     tooltip.transition().duration(500).style("opacity", 0);
                 });
 
-            // Draw rectangles for the Open-Close
             candlesticks.append("rect")
                 .attr("x", d => x(d.date))
-                .attr("y", d => y(Math.max(d.open, d.close)))
+                .attr("y", height)
                 .attr("width", x.bandwidth())
+                .transition().duration(800)
+                .attr("y", d => y(Math.max(d.open, d.close)))
                 .attr("height", d => Math.abs(y(d.open) - y(d.close)))
                 .attr("fill", d => d.open > d.close ? "red" : "green");
 
-            // Draw lines for the High-Low
             candlesticks.append("line")
                 .attr("x1", d => x(d.date) + x.bandwidth() / 2)
                 .attr("x2", d => x(d.date) + x.bandwidth() / 2)
+                .attr("y1", height)
+                .attr("y2", height)
+                .transition().duration(800)
                 .attr("y1", d => y(d.high))
                 .attr("y2", d => y(d.low))
                 .attr("stroke", "black")

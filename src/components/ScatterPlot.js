@@ -24,29 +24,29 @@ const ScatterPlot = ({ data }) => {
             const x = d3.scaleTime()
                 .domain(d3.extent(sortedData, d => d.date))
                 .range([0, width]);
-            svg.append("g")
-                .attr("transform", `translate(0,${height})`)
-                .call(d3.axisBottom(x).tickFormat(d3.timeFormat("%Y-%m-%d")));
 
             const y = d3.scaleLinear()
                 .domain([350, d3.max(sortedData, d => d.close)])
                 .range([height, 0])
                 .nice();
+
+            svg.append("g")
+                .attr("transform", `translate(0,${height})`)
+                .call(d3.axisBottom(x).tickFormat(d3.timeFormat("%Y-%m-%d")));
+
             svg.append("g")
                 .call(d3.axisLeft(y));
 
-            // Tooltip
             const tooltip = d3.select("body").append("div")
                 .attr("class", "tooltip")
                 .style("opacity", 0);
 
-            // Dots with Tooltip
             svg.selectAll(".dot")
                 .data(sortedData)
                 .enter().append("circle")
                 .attr("class", "dot")
                 .attr("cx", d => x(d.date))
-                .attr("cy", d => y(d.close))
+                .attr("cy", height)
                 .attr("r", 5)
                 .attr("fill", "steelblue")
                 .on("mouseover", function(event, d) {
@@ -55,7 +55,10 @@ const ScatterPlot = ({ data }) => {
                         .style("left", (event.pageX + 10) + "px")
                         .style("top", (event.pageY - 20) + "px");
                 })
-                .on("mouseout", () => tooltip.transition().duration(500).style("opacity", 0));
+                .on("mouseout", () => tooltip.transition().duration(500).style("opacity", 0))
+                .transition()
+                .duration(1000)
+                .attr("cy", d => y(d.close));
         }
     }, [data]);
 

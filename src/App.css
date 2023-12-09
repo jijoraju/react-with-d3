@@ -1,3 +1,64 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.header, .footer {
+  text-align: center;
+  width: 100%;
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.navbar, .footer {
+  background-color: black;
+  color: white;
+  padding: 10px;
+}
+
+.navbar h1 {
+  text-align: center;
+}
+
+.chart-selector {
+  margin: 30px 0;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.chart-selector label {
+  margin-right: 10px;
+}
+
+.chart-selector select {
+  padding: 5px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+.chart-container {
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .chart-container {
+    width: 100%;
+    padding: 0 10px;
+  }
+}
+
+
 .d3-component {
   font-family: 'Arial', sans-serif;
 }
@@ -33,7 +94,6 @@
 }
 
 
-/* Styling for the SVG container */
 .d3-line-chart {
   font-family: 'Arial', sans-serif;
   background-color: #f8f9fa;
@@ -42,7 +102,6 @@
   padding: 10px;
 }
 
-/* Styling for the axis */
 .axis path,
 .axis line {
   fill: none;
@@ -54,14 +113,12 @@
   fill: #555;
 }
 
-/* Styling for the line */
 .line {
   fill: none;
   stroke: steelblue;
   stroke-width: 2;
 }
 
-/* Styling for the ticks and grid lines */
 .tick line {
   opacity: 0.1;
 }

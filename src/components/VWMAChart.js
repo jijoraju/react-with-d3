@@ -6,7 +6,8 @@ const VWMAChart = ({ data }) => {
 
     useEffect(() => {
         if (data && d3Container.current) {
-            d3.select(d3Container.current).selectAll("*").remove();  // Clear existing SVG content
+            // Clear existing SVG content
+            d3.select(d3Container.current).selectAll("*").remove();
 
             const margin = { top: 20, right: 20, bottom: 30, left: 50 },
                 width = 960 - margin.left - margin.right,
@@ -18,10 +19,9 @@ const VWMAChart = ({ data }) => {
                 .append("g")
                 .attr("transform", `translate(${margin.left},${margin.top})`);
 
-            // Parse date
             data.forEach(d => {
                 d.date = new Date(d.date);
-                d.volume = +d.volume; // Ensure volume is a number
+                d.volume = +d.volume;
             });
 
             const x = d3.scaleTime()
@@ -29,7 +29,7 @@ const VWMAChart = ({ data }) => {
                 .range([0, width]);
 
             const y = d3.scaleLinear()
-                .domain([350, d3.max(data, d => d.close)]) // Adjusted to start from 350
+                .domain([350, d3.max(data, d => d.close)])
                 .range([height, 0]);
 
             const calculateVWMA = (data, period = 5) => {
@@ -47,7 +47,6 @@ const VWMAChart = ({ data }) => {
                 .x(d => x(d.date))
                 .y(d => y(d.vwma));
 
-            // Tooltip setup
             const tooltip = d3.select('body').append('div')
                 .attr('class', 'tooltip')
                 .style('opacity', 0)
@@ -58,11 +57,22 @@ const VWMAChart = ({ data }) => {
                 .style('border-radius', '5px')
                 .style('padding', '5px');
 
-            svg.append("path")
+            const path = svg.append("path")
                 .datum(vwmaData)
                 .attr("class", "line")
                 .attr("d", line)
-                .style("stroke", "purple");
+                .style("stroke", "purple")
+                .style("fill", "none")
+                .style("stroke-width", 1.5);
+
+            const totalLength = path.node().getTotalLength();
+
+            path
+                .attr("stroke-dasharray", totalLength + " " + totalLength)
+                .attr("stroke-dashoffset", totalLength)
+                .transition()
+                .duration(2000)
+                .attr("stroke-dashoffset", 0);
 
             svg.append("g")
                 .attr("transform", `translate(0,${height})`)
@@ -71,7 +81,6 @@ const VWMAChart = ({ data }) => {
             svg.append("g")
                 .call(d3.axisLeft(y));
 
-            // Adding points for tooltip
             svg.selectAll(".dot")
                 .data(vwmaData)
                 .enter().append("circle")
@@ -79,6 +88,7 @@ const VWMAChart = ({ data }) => {
                 .attr("cx", d => x(d.date))
                 .attr("cy", d => y(d.vwma))
                 .attr("r", 5)
+                .style("fill", "purple")
                 .on("mouseover", (event, d) => {
                     tooltip.transition().duration(200).style("opacity", 0.9);
                     tooltip.html(`Date: ${d3.timeFormat("%Y-%m-%d")(d.date)}<br>VWMA: ${d.vwma.toFixed(2)}`)
@@ -87,7 +97,11 @@ const VWMAChart = ({ data }) => {
                 })
                 .on("mouseout", () => {
                     tooltip.transition().duration(500).style("opacity", 0);
-                });
+                })
+                .style("opacity", 0)
+                .transition()
+                .duration(2000)
+                .style("opacity", 1);
         }
     }, [data]);
 

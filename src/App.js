@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import BarChart from "./components/BarChart";
 import LineChart from "./components/LineChart";
 import fetchData from "./data/alphaVantageService";
@@ -9,9 +9,13 @@ import Histogram from "./components/Histogram";
 import CandlestickChart from "./components/CandlestickChart";
 import MovingAverageLineChart from "./components/MovingAverageLineChart";
 import VWMAChart from "./components/VWMAChart";
+import Header from "./components/Header";
+import Footer from "./components/Footer";
 
 const App = () => {
     const [data, setData] = useState([]);
+    const [selectedChart, setSelectedChart] = useState('BarChart');
+
 
     const transformData = (rawData) => {
         // This will sort the entries by date in descending order and then take the last 10 entries
@@ -34,25 +38,52 @@ const App = () => {
         });
     }, []);
 
+    const renderChart = () => {
+        switch (selectedChart) {
+            case 'BarChart':
+                return <BarChart data={data}/>;
+            case 'LineChart':
+                return <LineChart data={data}/>;
+            case 'AreaChart':
+                return <AreaChart data={data}/>;
+            case 'ScatterPlot':
+                return <ScatterPlot data={data}/>;
+            case 'Histogram':
+                return <Histogram data={data}/>;
+            case 'CandlestickChart':
+                return <CandlestickChart data={data}/>;
+            case 'MovingAverageLineChart':
+                return <MovingAverageLineChart data={data}/>;
+            case 'VWMAChart':
+                return <VWMAChart data={data}/>;
+            default:
+                return null;
+        }
+    };
+
     return (
-        <div>
-            {/*<h1>MSFT Stock Closing Prices - Last 10 Days</h1>*/}
-            <h1>MSFT Stock Closing Prices Bar Chart</h1>
-            <BarChart data={data} />
-            <h1>MSFT Stock Closing Prices Line Chart</h1>
-            <LineChart data={data} />
-            <h1>MSFT Stock Closing Prices Area Chart</h1>
-            <AreaChart data={data} />
-            <h1>MSFT Stock Closing Prices Scatter Plot</h1>
-            <ScatterPlot data={data} />
-            <h1>MSFT Stock Closing Prices Histogram</h1>
-            <Histogram data={data} />
-            <h1>MSFT Stock Closing Prices Candlestick Chart</h1>
-            <CandlestickChart data={data} />
-            <h1>MSFT Stock Closing Prices Moving Average Line Chart</h1>
-            <MovingAverageLineChart data={data} />
-            <h1>MSFT Stock Volume-Weighted Moving Average Chart</h1>
-            <VWMAChart data={data} />
+
+        <div className="app">
+            <Header/>
+            <div className="content">
+                <div className="chart-selector">
+                    <label htmlFor="chart-type">Select Chart Type: </label>
+                    <select id="chart-type" onChange={e => setSelectedChart(e.target.value)} value={selectedChart}>
+                        <option value="BarChart">Bar Chart</option>
+                        <option value="LineChart">Line Chart</option>
+                        <option value="AreaChart">Area Chart</option>
+                        <option value="ScatterPlot">Scatter Plot</option>
+                        <option value="Histogram">Histogram</option>
+                        <option value="CandlestickChart">Candlestick Chart</option>
+                        <option value="MovingAverageLineChart">Moving Average Line Chart</option>
+                        <option value="VWMAChart">VWMA Chart</option>
+                    </select>
+                </div>
+                <div className="chart-container">
+                    {renderChart()}
+                </div>
+            </div>
+            <Footer/>
         </div>
     );
 }

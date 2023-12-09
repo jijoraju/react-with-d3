@@ -35,6 +35,11 @@ const AreaChart = ({ data }) => {
             svg.append("g")
                 .call(d3.axisLeft(y));
 
+            const areaGenerator = d3.area()
+                .x(d => x(d.date))
+                .y0(height)
+                .y1(d => y(d.close));
+
             // Tooltip
             const tooltip = d3.select("body").append("div")
                 .attr("class", "tooltip")
@@ -42,30 +47,39 @@ const AreaChart = ({ data }) => {
 
             svg.append("path")
                 .datum(sortedData)
-                .attr("fill", "steelblue")
+                .attr("fill", "lightgreen")
                 .attr("stroke", "none")
-                .attr("d", d3.area()
-                    .x(d => x(d.date))
-                    .y0(height)
-                    .y1(d => y(d.close))
-                );
+                .attr("d", areaGenerator)
+                .attr("opacity", 0)
+                .transition()
+                .duration(1000)
+                .attr("opacity", 1);
 
-            // Dots for Tooltip
-            svg.selectAll(".dot")
+            const dots = svg.selectAll(".dot")
                 .data(sortedData)
                 .enter().append("circle")
                 .attr("class", "dot")
                 .attr("cx", d => x(d.date))
+                .attr("cy", height)
+                .attr("r", 0)
+                .attr("fill", "red");
+
+            dots.transition()
+                .duration(1000)
                 .attr("cy", d => y(d.close))
-                .attr("r", 5)
-                .attr("fill", "steelblue")
-                .on("mouseover", function(event, d) {
-                    tooltip.transition().duration(200).style("opacity", .9);
-                    tooltip.html(`Date: ${d3.timeFormat("%Y-%m-%d")(d.date)}<br>Close: ${d.close}`)
-                        .style("left", (event.pageX + 10) + "px")
-                        .style("top", (event.pageY - 20) + "px");
-                })
-                .on("mouseout", () => tooltip.transition().duration(500).style("opacity", 0));
+                .attr("r", 5);
+
+            dots.on("mouseover", function(event, d) {
+                tooltip.transition().duration(200).style("opacity", .9);
+                tooltip.html(`Date: ${d3.timeFormat("%Y-%m-%d")(d.date)}<br>Close: ${d.close}`)
+                    .style("left", (event.pageX + 10) + "px")
+                    .style("top", (event.pageY - 20) + "px");
+                d3.select(this).transition().duration(100).attr("r", 7);
+            })
+                .on("mouseout", function() {
+                    tooltip.transition().duration(500).style("opacity", 0);
+                    d3.select(this).transition().duration(100).attr("r", 5);
+                });
         }
     }, [data]);
 

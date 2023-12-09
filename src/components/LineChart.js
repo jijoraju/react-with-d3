@@ -33,23 +33,31 @@ const LineChart = ({ data }) => {
             svg.append("g")
                 .call(d3.axisLeft(y));
 
-            // Tooltip
             const tooltip = d3.select("body").append("div")
                 .attr("class", "tooltip")
                 .style("opacity", 0);
 
-            // Line
-            svg.append("path")
+            const line = d3.line()
+                .x(d => x(d.date))
+                .y(d => y(d.close));
+
+            const path = svg.append("path")
                 .datum(data)
                 .attr("fill", "none")
-                .attr("stroke", "steelblue")
+                .attr("stroke", "green")
                 .attr("stroke-width", 1.5)
-                .attr("d", d3.line()
-                    .x(d => x(d.date))
-                    .y(d => y(d.close))
-                );
+                .attr("d", line)
+                .attr("stroke-dasharray", function() {
+                    const length = this.getTotalLength();
+                    return `${length} ${length}`;
+                })
+                .attr("stroke-dashoffset", function() {
+                    return this.getTotalLength();
+                })
+                .transition()
+                .duration(2000)
+                .attr("stroke-dashoffset", 0);
 
-            // Dots with Tooltip
             svg.selectAll(".dot")
                 .data(data)
                 .enter().append("circle")
@@ -57,7 +65,7 @@ const LineChart = ({ data }) => {
                 .attr("cx", d => x(d.date))
                 .attr("cy", d => y(d.close))
                 .attr("r", 5)
-                .attr("fill", "steelblue")
+                .attr("fill", "green")
                 .on("mouseover", function(event, d) {
                     tooltip.transition().duration(200).style("opacity", .9);
                     tooltip.html(`Date: ${d3.timeFormat("%Y-%m-%d")(d.date)}<br>Close: ${d.close}`)
