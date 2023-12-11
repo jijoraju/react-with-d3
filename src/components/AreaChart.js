@@ -66,7 +66,7 @@ const AreaChart = ({ data }) => {
                 .attr("x", 0 - (height / 2))
                 .attr("dy", "1em")
                 .style("text-anchor", "middle")
-                .text("Close Value");
+                .text("Price");
 
             const dots = svg.selectAll(".dot")
                 .data(sortedData)

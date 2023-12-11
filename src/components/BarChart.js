@@ -47,7 +47,7 @@ const BarChart = ({ data }) => {
                 .attr("x", 0 - (height / 2))
                 .attr("dy", "1em")
                 .style("text-anchor", "middle")
-                .text("Close Value");
+                .text("Price");
 
 
             const tooltip = d3.select("body").append("div")
